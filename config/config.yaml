@@ -1,0 +1,39 @@
+redis:
+  host: 127.0.0.1:6379
+  user:
+  password:
+  db: 4
+sql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: 123456
+  db: notification
+  pool_recycle: 3600
+influxdb:
+  host: 127.0.0.1
+  port: 8086
+  org: my-org
+  token: my-super-influxdb-auth-token
+  bucket: notification
+testSQL:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: 123456
+  db: notification_test
+  pool_recycle: 3600
+
+
+server:
+  port: 9380
+  rear_timeout: 300  # s
+  write_timeout: 300  # s
+  is_initial: True
+  smtp_server: smtp.gmail.com
+  smtp_user: wilson.lin@nadisystem.com
+  smtp_password: nclgwgizalvtymdp
+
+  account_server: http://192.168.1.10:9322
+  super_token: 57at3klp0y192aecwc
+

@@ -1,0 +1,73 @@
+services:
+  mysql:
+    image: mysql
+    container_name: notification_mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: notification
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: wilson
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./deploy/sql_mount:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis
+    container_name: notification_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./deploy/redis:/usr/local/etc/redis
+    healthcheck:
+      test: [ "CMD", "redis-cli","ping" ]
+      timeout: 20s
+      retries: 10
+
+  influxdb:
+    image: influxdb
+    container_name: notification_influxdb
+    restart: always
+    volumes:
+      - ./deploy/influxdb/data:/var/lib/influxdb2
+      - ./deploy/influxdb/config:/etc/influxdb2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: wilson
+      DOCKER_INFLUXDB_INIT_PASSWORD: 123456123456
+      DOCKER_INFLUXDB_INIT_ORG: my-org
+      DOCKER_INFLUXDB_INIT_BUCKET: notification
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: my-super-influxdb-auth-token
+    ports:
+      - "8086:8086"
+    healthcheck:
+      test: [ "CMD", "curl", "influxdb:8086/api/v2/ping" ]
+      interval: 1m
+      timeout: 10s
+      retries: 5
+
+  notification:
+    container_name: notification
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9380:9380"
+    volumes:
+      - ./config/config.yaml:/source/config/config.yaml
+      - ./deploy/api/dockerLog:/app/log
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy

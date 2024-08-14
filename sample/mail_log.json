@@ -1,0 +1,102 @@
+[
+    {
+        "id": 1,
+        "timestamp": 1720078289.5007842,
+        "status": "Success",
+        "recipient": [
+            {
+                "group": "NOC_Admin",
+                "account": [
+                    {
+                        "username": "3CPaul",
+                        "email": "3CPaul@gmail.com",
+                        "name": "3CPaul"
+                    },
+                    {
+                        "username": "Amber.Liao",
+                        "email": "Amber.Liao@gmail.com",
+                        "name": "Amber.Liao"
+                    },
+                    {
+                        "username": "Beyoung.Chou",
+                        "email": "Beyoung.Chou@gmail.com",
+                        "name": "Beyoung.Chou"
+                    }
+                ]
+            },
+            {
+                "group": "Manager",
+                "account": [
+                    {
+                        "username": "FarEastSupervisor02",
+                        "email": "supervisor02@fareastgroup.com",
+                        "name": "Eric Cheng"
+                    },
+                    {
+                        "username": "FarEastSupervisor01",
+                        "email": "supervisor01@fareastgroup.com",
+                        "name": "Emma Huang"
+                    },
+                    {
+                        "username": "Jimmyfow123",
+                        "email": "inventorymanager@fareastgrou...",
+                        "name": "戢米花"
+                    }
+                ]
+            }
+        ],
+        "subject": "Alarm_Rule_Setting_Issue",
+        "content": "Format error in Alarm rule setting.",
+        "sender": "NOC"
+    },
+    {
+        "id": 2,
+        "timestamp": 1720078289.5007842,
+        "status": "Failure",
+        "recipient": [
+            {
+                "group": "NOC_Admin",
+                "account": [
+                    {
+                        "username": "3CPaul",
+                        "email": "3CPaul@gmail.com",
+                        "name": "3CPaul"
+                    },
+                    {
+                        "username": "Amber.Liao",
+                        "email": "Amber.Liao@gmail.com",
+                        "name": "Amber.Liao"
+                    },
+                    {
+                        "username": "Beyoung.Chou",
+                        "email": "Beyoung.Chou@gmail.com",
+                        "name": "Beyoung.Chou"
+                    }
+                ]
+            },
+            {
+                "group": "Manager",
+                "account": [
+                    {
+                        "username": "FarEastSupervisor02",
+                        "email": "supervisor02@fareastgroup.com",
+                        "name": "Eric Cheng"
+                    },
+                    {
+                        "username": "FarEastSupervisor01",
+                        "email": "supervisor01@fareastgroup.com",
+                        "name": "Emma Huang"
+                    },
+                    {
+                        "username": "Jimmyfow123",
+                        "email": "inventorymanager@fareastgrou...",
+                        "name": "戢米花"
+                    }
+                ]
+            }
+        ],
+        "subject": "Account_Login_Unauthorized",
+        "content": "Login with expired token.",
+        "sender": "NOC"
+    }
+]
