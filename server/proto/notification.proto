@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+service NotificationService {
+  rpc SendEmail (EmailSendRequest) returns (EmailSendResponse);
+}
+
+message EmailSendRequest {
+  string sender = 1;
+  string subject = 2;
+  string message = 3;
+  repeated string groups = 4;
+  repeated string accounts = 5;
+  repeated string emails = 6;
+}
+
+message EmailSendResponse {
+  int64 id = 1;
+  string sender = 2;
+  string subject = 3;
+  string message = 4;
+  string status = 5;
+  repeated Recipient recipients = 6;
+  float timestamp = 7;
+}
+
+message Recipient {
+  string group = 1;
+  repeated Account accounts = 2;
+}
+
+message Account {
+  string username = 1;
+  string email = 2;
+  string name = 3;
+}

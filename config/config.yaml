@@ -27,6 +27,7 @@ testSQL:
 
 server:
   port: 9380
+  g_port: 59380
   rear_timeout: 300  # s
   write_timeout: 300  # s
   is_initial: True

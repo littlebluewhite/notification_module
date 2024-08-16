@@ -10,7 +10,7 @@ import influxdb_client
 
 from function.async_request import fetch
 from function.config_manager import ConfigManager
-from schemas.API.api_mail import Status
+from schemas.API.api_mail import Status, Recipient, Account
 
 
 class APIMailFunction:
@@ -19,24 +19,28 @@ class APIMailFunction:
 
     @staticmethod
     def send_email(email: list, subject: str, message: str, sender: str):
-        with smtplib.SMTP(ConfigManager.server.smtp_server) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.login(ConfigManager.server.smtp_user, ConfigManager.server.smtp_password)
-            cc = []
-            bcc = []
-            msg = MIMEText(message, "plain", "utf-8")
-            msg.preamble = subject
-            msg["Subject"] = subject
-            msg['From'] = formataddr((str(Header(sender, 'utf-8')), "your-email@example.com"))
-            msg["To"] = ", ".join(email)
-            if len(cc): msg["Cc"] = ", ".join(cc)
-            if len(bcc): msg["Bcc"] = ", ".join(bcc)
-            response = smtp.send_message(msg)
-            if response:
-                return False
-            else:
-                return True
+        try:
+            with smtplib.SMTP(ConfigManager.server.smtp_server) as smtp:
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.login(ConfigManager.server.smtp_user, ConfigManager.server.smtp_password)
+                cc = []
+                bcc = []
+                msg = MIMEText(message, "plain", "utf-8")
+                msg.preamble = subject
+                msg["Subject"] = subject
+                msg['From'] = formataddr((str(Header(sender, 'utf-8')), "your-email@example.com"))
+                msg["To"] = ", ".join(email)
+                if len(cc): msg["Cc"] = ", ".join(cc)
+                if len(bcc): msg["Bcc"] = ", ".join(bcc)
+                response = smtp.send_message(msg)
+                if response:
+                    return False
+                else:
+                    return True
+        except Exception as e:
+            print(e)
+            return False
 
     @staticmethod
     async def get_account_data():
@@ -79,7 +83,15 @@ class APIMailFunction:
                 to_email.append(e)
 
         recipient.append({"group": "", "account": [{"username": "", "email": e, "name": ""} for e in mails]})
-        return to_email, recipient
+        recipient_pydantic = [
+            Recipient(
+                group=r["group"],
+                account=[
+                    Account(username=a["username"], email=a["email"], name=a["name"]) for a in r["account"]
+                ]
+            ) for r in recipient
+        ]
+        return to_email, recipient_pydantic
 
 
 csv.field_size_limit(10 ** 7)
@@ -124,11 +136,12 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
 
         return result
 
-    async def create_mails(self, mail_create, db):
+    async def create_mails(self, mail_create, db) -> dict:
         # write to sql and get id
         sql_list = self.create_sql(db, [dict()])
         mail = self.main_schemas(id=sql_list[0].id, sender=mail_create.sender, subject=mail_create.subject,
-                                 message=mail_create.message, timestamp=sql_list[0].created_at.timestamp())
+                                 message=mail_create.message, timestamp=sql_list[0].created_at.timestamp(),
+                                 recipient=[])
 
         # get account and group email
         account_list, account_info = await self.get_account_data()

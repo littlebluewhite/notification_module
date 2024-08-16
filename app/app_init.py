@@ -24,7 +24,7 @@ def create_connection(config):
 
 
 def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB):
-    app = FastAPI(title="system_log", version=version)
+    app = FastAPI(title="notification", version=version)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
