@@ -48,4 +48,12 @@ class APIMailRouter(APIMailOperate):
                 content = await self.create_mails(mail, db)
                 return JSONResponse(content=content)
 
+        @router.get("/test")
+        async def test_log():
+            return JSONResponse(content="test")
+
+        @router.get("/test2")
+        async def test_log2():
+            raise self.exc(status_code=444, message="test exception", message_code=5)
+
         return router

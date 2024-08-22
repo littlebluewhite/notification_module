@@ -7,9 +7,9 @@ from email.utils import formataddr
 
 from general_operator.function.General_operate import GeneralOperate
 import influxdb_client
+from general_util.async_request import fetch
+from general_util.config_manager import ConfigManager
 
-from function.async_request import fetch
-from function.config_manager import ConfigManager
 from schemas.API.api_mail import Status, Recipient, Account
 
 

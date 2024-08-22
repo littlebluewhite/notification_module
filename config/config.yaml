@@ -35,6 +35,10 @@ server:
   smtp_user: wilson.lin@nadisystem.com
   smtp_password: nclgwgizalvtymdp
 
-  account_server: http://192.168.1.10:9322
+  account_server: http://127.0.0.1:9322
   super_token: 57at3klp0y192aecwc
+
+  system_log_g_server: 127.0.0.1:59360
+  system_log_r_server: http://127.0.0.1:9360
+  system_log_enable: true
 

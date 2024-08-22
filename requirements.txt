@@ -9,7 +9,8 @@ charset-normalizer==3.3.2
 click==8.1.7
 fastapi==0.112.0
 frozenlist==1.4.1
-general_operator==0.2.2
+general_operator==0.2.6
+general_util==0.0.6
 grpcio==1.65.4
 grpcio-tools==1.65.4
 h11==0.14.0
