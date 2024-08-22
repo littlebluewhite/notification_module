@@ -1,7 +1,7 @@
 
 url_mapping = {
-    # "/docs": ("notification", "document", "docs"),
-    # "/openapi.json": ("notification", "document", "docs2")
+    "/docs": ("notification", "document", "docs"),
+    "/openapi.json": ("notification", "document", "docs2")
 }
 
 status_code_rules = {

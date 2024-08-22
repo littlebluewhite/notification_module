@@ -10,6 +10,7 @@ from redis.client import Redis
 
 from app.SQL import models
 from data.API import api_mail
+from data.log.log_mapping import url_mapping
 from routers.API.api_mail import APIMailRouter
 
 # from fastapi.security.api_key import APIKeyHeader
@@ -45,7 +46,7 @@ def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB, server_config: di
         if server_config["system_log_enable"]:
             response = await call_next(request)
             await DealSystemLog(request=request, response=response,
-                                url_mapping=None, code_rules=None).deal(server_config["system_log_g_server"])
+                                url_mapping=url_mapping, code_rules=None).deal(server_config["system_log_g_server"])
             return response
 
     @app.exception_handler(GeneralOperatorException)
@@ -56,8 +57,5 @@ def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB, server_config: di
             headers={"message": f"{exc.message}", "message_code": f"{exc.message_code}"}
         )
 
-    @app.get("/exception")
-    async def test_exception():
-        raise GeneralOperatorException(status_code=423, detail="test exception")
 
     return app
