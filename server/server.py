@@ -41,3 +41,23 @@ class NotificationService(notification_pb2_grpc.NotificationServiceServicer):
             )
         db.close()
         return result
+
+    async def SendEmailSimple(self, request, context):
+        mail_create = MailCreate(
+            sender=request.sender,
+            subject=request.subject,
+            message=request.message,
+            groups=request.groups,
+            accounts=request.accounts,
+            emails=request.emails
+        )
+        print("receive request: ", mail_create)
+        db = self.db_session()
+        with db.begin():
+            response: str = await self.api_mail_operate.create_mails_without_return(mail_create, db)
+            result = notification_pb2.SimpleMessageResponse(
+                message=response
+            )
+        db.close()
+        return result
+

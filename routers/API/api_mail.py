@@ -48,6 +48,13 @@ class APIMailRouter(APIMailOperate):
                 content = await self.create_mails(mail, db)
                 return JSONResponse(content=content)
 
+        @router.post("/send_without_return")
+        async def create_logs(mail: create_schemas,
+                              db: Session = Depends(create_get_db(self.db_session))):
+            with db.begin():
+                content = await self.create_mails_without_return(mail, db)
+                return JSONResponse(content=content)
+
         @router.get("/test")
         async def test_log():
             return JSONResponse(content="test")

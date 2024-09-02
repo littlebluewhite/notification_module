@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fserver/proto/notification.proto\"v\n\x10\x45mailSendRequest\x12\x0e\n\x06sender\x18\x01 \x01(\t\x12\x0f\n\x07subject\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x0e\n\x06groups\x18\x04 \x03(\t\x12\x10\n\x08\x61\x63\x63ounts\x18\x05 \x03(\t\x12\x0e\n\x06\x65mails\x18\x06 \x03(\t\"\x94\x01\n\x11\x45mailSendResponse\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0e\n\x06sender\x18\x02 \x01(\t\x12\x0f\n\x07subject\x18\x03 \x01(\t\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x1e\n\nrecipients\x18\x06 \x03(\x0b\x32\n.Recipient\x12\x11\n\ttimestamp\x18\x07 \x01(\x02\"6\n\tRecipient\x12\r\n\x05group\x18\x01 \x01(\t\x12\x1a\n\x08\x61\x63\x63ounts\x18\x02 \x03(\x0b\x32\x08.Account\"8\n\x07\x41\x63\x63ount\x12\x10\n\x08username\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t2I\n\x13NotificationService\x12\x32\n\tSendEmail\x12\x11.EmailSendRequest\x1a\x12.EmailSendResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fserver/proto/notification.proto\"v\n\x10\x45mailSendRequest\x12\x0e\n\x06sender\x18\x01 \x01(\t\x12\x0f\n\x07subject\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x0e\n\x06groups\x18\x04 \x03(\t\x12\x10\n\x08\x61\x63\x63ounts\x18\x05 \x03(\t\x12\x0e\n\x06\x65mails\x18\x06 \x03(\t\"\x94\x01\n\x11\x45mailSendResponse\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x0e\n\x06sender\x18\x02 \x01(\t\x12\x0f\n\x07subject\x18\x03 \x01(\t\x12\x0f\n\x07message\x18\x04 \x01(\t\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x1e\n\nrecipients\x18\x06 \x03(\x0b\x32\n.Recipient\x12\x11\n\ttimestamp\x18\x07 \x01(\x02\"(\n\x15SimpleMessageResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"6\n\tRecipient\x12\r\n\x05group\x18\x01 \x01(\t\x12\x1a\n\x08\x61\x63\x63ounts\x18\x02 \x03(\x0b\x32\x08.Account\"8\n\x07\x41\x63\x63ount\x12\x10\n\x08username\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t2\x87\x01\n\x13NotificationService\x12\x32\n\tSendEmail\x12\x11.EmailSendRequest\x1a\x12.EmailSendResponse\x12<\n\x0fSendEmailSimple\x12\x11.EmailSendRequest\x1a\x16.SimpleMessageResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,10 +25,12 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_EMAILSENDREQUEST']._serialized_end=153
   _globals['_EMAILSENDRESPONSE']._serialized_start=156
   _globals['_EMAILSENDRESPONSE']._serialized_end=304
-  _globals['_RECIPIENT']._serialized_start=306
-  _globals['_RECIPIENT']._serialized_end=360
-  _globals['_ACCOUNT']._serialized_start=362
-  _globals['_ACCOUNT']._serialized_end=418
-  _globals['_NOTIFICATIONSERVICE']._serialized_start=420
-  _globals['_NOTIFICATIONSERVICE']._serialized_end=493
+  _globals['_SIMPLEMESSAGERESPONSE']._serialized_start=306
+  _globals['_SIMPLEMESSAGERESPONSE']._serialized_end=346
+  _globals['_RECIPIENT']._serialized_start=348
+  _globals['_RECIPIENT']._serialized_end=402
+  _globals['_ACCOUNT']._serialized_start=404
+  _globals['_ACCOUNT']._serialized_end=460
+  _globals['_NOTIFICATIONSERVICE']._serialized_start=463
+  _globals['_NOTIFICATIONSERVICE']._serialized_end=598
 # @@protoc_insertion_point(module_scope)

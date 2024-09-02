@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from server.proto import notification_pb2 as server_dot_proto_dot_notification__pb2
+from . import notification_pb2 as server_dot_proto_dot_notification__pb2
 
 GRPC_GENERATED_VERSION = '1.65.4'
 GRPC_VERSION = grpc.__version__
@@ -44,12 +44,23 @@ class NotificationServiceStub(object):
                 request_serializer=server_dot_proto_dot_notification__pb2.EmailSendRequest.SerializeToString,
                 response_deserializer=server_dot_proto_dot_notification__pb2.EmailSendResponse.FromString,
                 _registered_method=True)
+        self.SendEmailSimple = channel.unary_unary(
+                '/NotificationService/SendEmailSimple',
+                request_serializer=server_dot_proto_dot_notification__pb2.EmailSendRequest.SerializeToString,
+                response_deserializer=server_dot_proto_dot_notification__pb2.SimpleMessageResponse.FromString,
+                _registered_method=True)
 
 
 class NotificationServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SendEmail(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendEmailSimple(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -62,6 +73,11 @@ def add_NotificationServiceServicer_to_server(servicer, server):
                     servicer.SendEmail,
                     request_deserializer=server_dot_proto_dot_notification__pb2.EmailSendRequest.FromString,
                     response_serializer=server_dot_proto_dot_notification__pb2.EmailSendResponse.SerializeToString,
+            ),
+            'SendEmailSimple': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendEmailSimple,
+                    request_deserializer=server_dot_proto_dot_notification__pb2.EmailSendRequest.FromString,
+                    response_serializer=server_dot_proto_dot_notification__pb2.SimpleMessageResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -91,6 +107,33 @@ class NotificationService(object):
             '/NotificationService/SendEmail',
             server_dot_proto_dot_notification__pb2.EmailSendRequest.SerializeToString,
             server_dot_proto_dot_notification__pb2.EmailSendResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendEmailSimple(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/NotificationService/SendEmailSimple',
+            server_dot_proto_dot_notification__pb2.EmailSendRequest.SerializeToString,
+            server_dot_proto_dot_notification__pb2.SimpleMessageResponse.FromString,
             options,
             channel_credentials,
             insecure,

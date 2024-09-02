@@ -2,6 +2,7 @@ syntax = "proto3";
 
 service NotificationService {
   rpc SendEmail (EmailSendRequest) returns (EmailSendResponse);
+  rpc SendEmailSimple (EmailSendRequest) returns (SimpleMessageResponse);
 }
 
 message EmailSendRequest {
@@ -21,6 +22,10 @@ message EmailSendResponse {
   string status = 5;
   repeated Recipient recipients = 6;
   float timestamp = 7;
+}
+
+message SimpleMessageResponse {
+  string message = 1;
 }
 
 message Recipient {

@@ -1,6 +1,7 @@
 import csv
 import json
 import smtplib
+import threading
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -41,6 +42,8 @@ class APIMailFunction:
         except Exception as e:
             print(e)
             return False
+
+
 
     @staticmethod
     async def get_account_data():
@@ -170,11 +173,53 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
         self.write(points)
         return mail.dict()
 
+    async def create_mails_without_return(self, mail_create, db) -> str:
+        # write to sql and get id
+        sql_list = self.create_sql(db, [dict()])
+        mail = self.main_schemas(id=sql_list[0].id, sender=mail_create.sender, subject=mail_create.subject,
+                                 message=mail_create.message, timestamp=sql_list[0].created_at.timestamp(),
+                                 recipient=[])
+
+        # get account and group email
+        account_list, account_info = await self.get_account_data()
+
+        # deal with group and account
+        to_email, recipient = self.change_account_group_to_recipient(
+            create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
+            account_list=account_list, account_info=account_info)
+
+        # send mail
+        self.send_email_thread(
+            mail=mail, email=to_email, subject=mail.subject, message=mail.message, sender=mail.sender, recipient=recipient)
+        return "ok"
+
+    def send_email_thread(self, mail, email: list, subject: str, message: str, sender: str, recipient: list):
+        def target():
+            is_success = self.send_email(email, subject, message, sender)
+            if is_success:
+                mail.status = Status.Success
+            else:
+                mail.status = Status.Failure
+
+            mail.recipient = recipient
+
+            # write to influxdb
+            points = [influxdb_client.Point(
+                "mail").tag("id", str(mail.id))
+                      .tag("sender", str(mail.sender))
+                      .tag("status", str(mail.status.value))
+                      .time(int(mail.timestamp * 10 ** 6) * 1000)
+                      .field("data", mail.json())]
+            self.write(points)
+
+        thread = threading.Thread(target=target)
+        thread.start()
+
+
 
 if __name__ == "__main__":
-    f = APIMailFunction()
-    # asyncio.run(f.get_account_data())
-
-    # f.change_account_group_to_recipient(
-    #     ["NADI_Admin"], ["admins", "kpc001", "kpc006"],
-    #     ["wwilson008@gmail.com", "Daniel@gmail.com"], account_list=account_list, account_info=account_info)
+    # email_list = ["wilson.lin@nadisystem.com"]
+    # subject = "Test Email"
+    # message = "This is a test email."
+    # sender = "Sender Name"
+    pass
