@@ -188,32 +188,33 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
             create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
             account_list=account_list, account_info=account_info)
 
-        # send mail
-        self.send_email_thread(
-            mail=mail, email=to_email, subject=mail.subject, message=mail.message, sender=mail.sender, recipient=recipient)
+        # send mail and write to influxdb
+        thread = threading.Thread(
+            target=self.send_email_target, args=(mail, to_email, mail.subject, mail.message, mail.sender, recipient))
+        thread.start()
+
+        print("thread: ", thread.ident)
+        print("thread: ", id(thread))
+        [print("thread1231231: ", k, v) for k, v in threading._active.items()]
         return "ok"
 
-    def send_email_thread(self, mail, email: list, subject: str, message: str, sender: str, recipient: list):
-        def target():
-            is_success = self.send_email(email, subject, message, sender)
-            if is_success:
-                mail.status = Status.Success
-            else:
-                mail.status = Status.Failure
+    def send_email_target(self, mail, email:list, subject:str, message:str, sender:str, recipient:list):
+        is_success = self.send_email(email, subject, message, sender)
+        if is_success:
+            mail.status = Status.Success
+        else:
+            mail.status = Status.Failure
 
-            mail.recipient = recipient
+        mail.recipient = recipient
 
-            # write to influxdb
-            points = [influxdb_client.Point(
-                "mail").tag("id", str(mail.id))
-                      .tag("sender", str(mail.sender))
-                      .tag("status", str(mail.status.value))
-                      .time(int(mail.timestamp * 10 ** 6) * 1000)
-                      .field("data", mail.json())]
-            self.write(points)
-
-        thread = threading.Thread(target=target)
-        thread.start()
+        # write to influxdb
+        points = [influxdb_client.Point(
+            "mail").tag("id", str(mail.id))
+                  .tag("sender", str(mail.sender))
+                  .tag("status", str(mail.status.value))
+                  .time(int(mail.timestamp * 10 ** 6) * 1000)
+                  .field("data", mail.json())]
+        self.write(points)
 
 
 
