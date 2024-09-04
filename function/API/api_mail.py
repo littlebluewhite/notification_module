@@ -192,10 +192,6 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
         thread = threading.Thread(
             target=self.send_email_target, args=(mail, to_email, mail.subject, mail.message, mail.sender, recipient))
         thread.start()
-
-        # print("thread: ", thread.ident)
-        # print("thread: ", id(thread))
-        [print("thread1231231: ", k, v) for k, v in threading._active.items()]
         return "ok"
 
     def send_email_target(self, mail, email:list, subject:str, message:str, sender:str, recipient:list):

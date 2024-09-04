@@ -44,9 +44,12 @@ def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB, server_config: di
     @app.middleware("http")
     async def deal_with_log(request: Request, call_next):
         response = await call_next(request)
-        if server_config["system_log_enable"]:
-            await DealSystemLog(request=request, response=response,
-                                url_mapping=url_mapping, code_rules=None).deal(server_config["system_log_g_server"])
+        try:
+            if server_config["system_log_enable"]:
+                await DealSystemLog(request=request, response=response,
+                                    url_mapping=url_mapping, code_rules=None).deal(server_config["system_log_g_server"])
+        except Exception as e:
+            print(e)
         return response
 
     @app.exception_handler(GeneralOperatorException)
