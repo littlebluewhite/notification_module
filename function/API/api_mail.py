@@ -181,8 +181,7 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
                                  recipient=[])
 
         # get account and group email
-        # account_dict, account_info = await self.get_account_data()
-        account_dict, account_info = {}, {}
+        account_dict, account_info = await self.get_account_data()
 
         # deal with group and account
         to_email, recipient = self.change_account_group_to_recipient(
