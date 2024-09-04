@@ -54,13 +54,13 @@ class APIMailFunction:
 
     @staticmethod
     def change_account_group_to_recipient(create_group: list, create_account: list, create_email: list,
-                                          account_list, account_info):
+                                          account_dict, account_info):
         to_email = []
         recipient = []
         user_dict = {list(item.keys())[0]: list(item.values())[0] for item in account_info.values()}
         for g in create_group:
             accounts = []
-            for _id, a in account_list.items():
+            for _id, a in account_dict.items():
                 if list(a.values())[0]["Group"] == g:
                     username = list(a.keys())[0]
                     email = list(list(account_info[_id].values())[0].values())[0]["e-mail"]
@@ -147,12 +147,12 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
                                  recipient=[])
 
         # get account and group email
-        account_list, account_info = await self.get_account_data()
+        account_dict, account_info = await self.get_account_data()
 
         # deal with group and account
         to_email, recipient = self.change_account_group_to_recipient(
             create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
-            account_list=account_list, account_info=account_info)
+            account_dict=account_dict, account_info=account_info)
 
         # send mail
         is_success = self.send_email(email=to_email, subject=mail.subject, message=mail.message, sender=mail.sender)
@@ -181,20 +181,21 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
                                  recipient=[])
 
         # get account and group email
-        account_list, account_info = await self.get_account_data()
+        # account_dict, account_info = await self.get_account_data()
+        account_dict, account_info = {}, {}
 
         # deal with group and account
         to_email, recipient = self.change_account_group_to_recipient(
             create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
-            account_list=account_list, account_info=account_info)
+            account_dict=account_dict, account_info=account_info)
 
         # send mail and write to influxdb
         thread = threading.Thread(
             target=self.send_email_target, args=(mail, to_email, mail.subject, mail.message, mail.sender, recipient))
         thread.start()
 
-        print("thread: ", thread.ident)
-        print("thread: ", id(thread))
+        # print("thread: ", thread.ident)
+        # print("thread: ", id(thread))
         [print("thread1231231: ", k, v) for k, v in threading._active.items()]
         return "ok"
 
