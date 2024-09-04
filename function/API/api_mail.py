@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import json
 import smtplib
@@ -49,7 +50,10 @@ class APIMailFunction:
     async def get_account_data():
         urls = [f"{ConfigManager.server.account_server}/api/account/get_all_account_list_table",
                 f"{ConfigManager.server.account_server}/api/account/get_all_account_info_list_table"]
-        data = await fetch(urls, headers={"Authorization": f"Bearer {ConfigManager.server.super_token}"})
+        try:
+            data = await fetch(urls, headers={"Authorization": f"Bearer {ConfigManager.server.super_token}"})
+        except Exception as e:
+            return {}, {}
         return data[0], data[1]
 
     @staticmethod
@@ -180,6 +184,13 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
                                  message=mail_create.message, timestamp=sql_list[0].created_at.timestamp(),
                                  recipient=[])
 
+        # et account and group email, get account and group email, send mail and write to influxdb
+        thread = threading.Thread(
+            target=self.send_email_target, args=(mail, mail_create))
+        thread.start()
+        return "ok"
+
+    async def send_email_async(self, mail, mail_create):
         # get account and group email
         account_dict, account_info = await self.get_account_data()
 
@@ -188,14 +199,7 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
             create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
             account_dict=account_dict, account_info=account_info)
 
-        # send mail and write to influxdb
-        thread = threading.Thread(
-            target=self.send_email_target, args=(mail, to_email, mail.subject, mail.message, mail.sender, recipient))
-        thread.start()
-        return "ok"
-
-    def send_email_target(self, mail, email:list, subject:str, message:str, sender:str, recipient:list):
-        is_success = self.send_email(email, subject, message, sender)
+        is_success = self.send_email(to_email, mail.subject, mail.message, mail.sender)
         if is_success:
             mail.status = Status.Success
         else:
@@ -211,6 +215,10 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
                   .time(int(mail.timestamp * 10 ** 6) * 1000)
                   .field("data", mail.json())]
         self.write(points)
+        print("send email success")
+
+    def send_email_target(self, mail, mail_create):
+        asyncio.run(self.send_email_async(mail, mail_create))
 
 
 
