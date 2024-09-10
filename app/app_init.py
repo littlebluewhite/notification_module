@@ -43,7 +43,12 @@ def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB, server_config: di
 
     @app.middleware("http")
     async def deal_with_log(request: Request, call_next):
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception as e:
+            print(e)
+            response = JSONResponse(status_code=500, content={"error": str(e)},
+                                    headers={"message": str(e), "message_code": "500"})
         try:
             if server_config["system_log_enable"]:
                 await DealSystemLog(request=request, response=response,

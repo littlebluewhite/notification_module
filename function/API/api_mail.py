@@ -53,6 +53,7 @@ class APIMailFunction:
         try:
             data = await fetch(urls, headers={"Authorization": f"Bearer {ConfigManager.server.super_token}"})
         except Exception as e:
+            print(e)
             return {}, {}
         return data[0], data[1]
 
