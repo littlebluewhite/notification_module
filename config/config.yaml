@@ -31,9 +31,14 @@ server:
   rear_timeout: 300  # s
   write_timeout: 300  # s
   is_initial: True
+  smtp_tls: True
   smtp_server: smtp.gmail.com
-  smtp_user: wilson.lin@nadisystem.com
-  smtp_password: nclgwgizalvtymdp
+  smtp_port: 25
+  smtp_proxy_type:
+  smtp_proxy_host:
+  smtp_proxy_port:
+  smtp_user: sammy.sheu@nadisystem.com
+  smtp_password: pdtuyubxdtnaambj
 
   account_server: http://127.0.0.1:9322
   super_token: 57at3klp0y192aecwc

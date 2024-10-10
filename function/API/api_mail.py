@@ -1,8 +1,11 @@
 import asyncio
 import csv
 import json
+import socks
+import socket
 import smtplib
 import threading
+from typing import Callable
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -22,10 +25,18 @@ class APIMailFunction:
     @staticmethod
     def send_email(email: list, subject: str, message: str, sender: str):
         try:
-            with smtplib.SMTP(ConfigManager.server.smtp_server) as smtp:
+            with CustomSMPT(
+                    smtp_host=ConfigManager.server.smtp_server,
+                    smtp_port=ConfigManager.server.smtp_port,
+                    proxy_host=ConfigManager.server.smtp_proxy_host,
+                    proxy_port=ConfigManager.server.smtp_proxy_port,
+                    proxy_type=ConfigManager.server.smtp_proxy_type
+                    ) as smtp:
                 smtp.ehlo()
-                smtp.starttls()
-                smtp.login(ConfigManager.server.smtp_user, ConfigManager.server.smtp_password)
+                if ConfigManager.server.smtp_tls:
+                    smtp.starttls()
+                if ConfigManager.server.smtp_user and ConfigManager.server.smtp_password:
+                    smtp.login(ConfigManager.server.smtp_user, ConfigManager.server.smtp_password)
                 cc = []
                 bcc = []
                 msg = MIMEText(message, "plain", "utf-8")
@@ -221,11 +232,24 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
     def send_email_target(self, mail, mail_create):
         asyncio.run(self.send_email_async(mail, mail_create))
 
+class CustomSMPT(smtplib.SMTP):
+    def __init__(self, smtp_host: str, smtp_port: int, proxy_type: int | None = None, proxy_host: str | None = None, proxy_port: int | None = None) -> None:
+        self.proxy_type = proxy_type
+        self.proxy_host = proxy_host
+        self.proxy_port = proxy_port
+        super().__init__(smtp_host, smtp_port)
+
+    def _get_socket(self, host, port, timeout):
+        if not self.proxy_type and not self.proxy_host and not self.proxy_port:
+            return super()._get_socket(host, port, timeout)
+        normal_connection = socket.create_connection
+        try:
+            socket.create_connection = socks.create_connection
+            socks.set_default_proxy(self.proxy_type, self.proxy_host, self.proxy_port)
+            return super()._get_socket(host, port, timeout)
+        finally:
+            socket.create_connection = normal_connection
 
 
 if __name__ == "__main__":
-    # email_list = ["wilson.lin@nadisystem.com"]
-    # subject = "Test Email"
-    # message = "This is a test email."
-    # sender = "Sender Name"
     pass

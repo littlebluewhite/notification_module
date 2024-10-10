@@ -21,6 +21,7 @@ protobuf==5.27.3
 pydantic==2.8.2
 pydantic_core==2.20.1
 PyMySQL==1.1.1
+PySocks==1.7.1
 python-dateutil==2.9.0.post0
 PyYAML==6.0.2
 reactivex==4.0.4
