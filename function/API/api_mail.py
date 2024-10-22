@@ -1,11 +1,12 @@
 import asyncio
 import csv
 import json
+import time
+
 import socks
 import socket
 import smtplib
 import threading
-from typing import Callable
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -31,7 +32,7 @@ class APIMailFunction:
                     proxy_host=ConfigManager.server.smtp_proxy_host,
                     proxy_port=ConfigManager.server.smtp_proxy_port,
                     proxy_type=ConfigManager.server.smtp_proxy_type
-                    ) as smtp:
+            ) as smtp:
                 smtp.ehlo()
                 if ConfigManager.server.smtp_tls:
                     smtp.starttls()
@@ -54,8 +55,6 @@ class APIMailFunction:
         except Exception as e:
             print(e)
             return False
-
-
 
     @staticmethod
     async def get_account_data():
@@ -189,11 +188,58 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
         self.write(points)
         return mail.dict()
 
+    async def create_mails_without_db(self, mail_create) -> dict:
+        now = time.time()
+        _id = int(now * 10 ** 6)
+        mail = self.main_schemas(id=_id, sender=mail_create.sender, subject=mail_create.subject,
+                                 message=mail_create.message, timestamp=now,
+                                 recipient=[])
+
+        # get account and group email
+        account_dict, account_info = await self.get_account_data()
+
+        # deal with group and account
+        to_email, recipient = self.change_account_group_to_recipient(
+            create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
+            account_dict=account_dict, account_info=account_info)
+
+        # send mail
+        is_success = self.send_email(email=to_email, subject=mail.subject, message=mail.message, sender=mail.sender)
+        if is_success:
+            mail.status = Status.Success
+        else:
+            mail.status = Status.Failure
+
+        mail.recipient = recipient
+
+        # write to influxdb
+        points = [influxdb_client.Point(
+            "mail").tag("id", str(mail.id))
+                  .tag("sender", str(mail.sender))
+                  .tag("status", str(mail.status.value))
+                  .time(int(mail.timestamp * 10 ** 6) * 1000)
+                  .field("data", mail.json())]
+        self.write(points)
+        return mail.dict()
+
     async def create_mails_without_return(self, mail_create, db) -> str:
         # write to sql and get id
         sql_list = self.create_sql(db, [dict()])
         mail = self.main_schemas(id=sql_list[0].id, sender=mail_create.sender, subject=mail_create.subject,
                                  message=mail_create.message, timestamp=sql_list[0].created_at.timestamp(),
+                                 recipient=[])
+
+        # et account and group email, get account and group email, send mail and write to influxdb
+        thread = threading.Thread(
+            target=self.send_email_target, args=(mail, mail_create))
+        thread.start()
+        return "ok"
+
+    async def create_mails_without_db_return(self, mail_create) -> str:
+        now = time.time()
+        _id = int(now * 10 ** 6)
+        mail = self.main_schemas(id=_id, sender=mail_create.sender, subject=mail_create.subject,
+                                 message=mail_create.message, timestamp=now,
                                  recipient=[])
 
         # et account and group email, get account and group email, send mail and write to influxdb
@@ -232,8 +278,10 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
     def send_email_target(self, mail, mail_create):
         asyncio.run(self.send_email_async(mail, mail_create))
 
+
 class CustomSMPT(smtplib.SMTP):
-    def __init__(self, smtp_host: str, smtp_port: int, proxy_type: int | None = None, proxy_host: str | None = None, proxy_port: int | None = None) -> None:
+    def __init__(self, smtp_host: str, smtp_port: int, proxy_type: int | None = None, proxy_host: str | None = None,
+                 proxy_port: int | None = None) -> None:
         self.proxy_type = proxy_type
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port

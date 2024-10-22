@@ -25,21 +25,21 @@ class NotificationService(notification_pb2_grpc.NotificationServiceServicer):
             emails=request.emails
         )
         print("receive request: ", mail_create)
-        db = self.db_session()
-        with db.begin():
-            response: dict = await self.api_mail_operate.create_mails(mail_create, db)
-            result = notification_pb2.EmailSendResponse(
-                id=response["id"],
-                sender="Alarm",
-                subject=response["subject"],
-                message=response["message"],
-                status=response["status"],
-                recipients=[notification_pb2.Recipient(group=r["group"], accounts=[
-                    notification_pb2.Account(username=a["username"], email=a["email"], name=a["name"]) for a in r["account"]
-                ]) for r in response["recipient"]],
-                timestamp=response["timestamp"]
-            )
-        db.close()
+        # db = self.db_session()
+        # with db.begin():
+        response: dict = await self.api_mail_operate.create_mails_without_db(mail_create)
+        result = notification_pb2.EmailSendResponse(
+            id=response["id"],
+            sender="Alarm",
+            subject=response["subject"],
+            message=response["message"],
+            status=response["status"],
+            recipients=[notification_pb2.Recipient(group=r["group"], accounts=[
+                notification_pb2.Account(username=a["username"], email=a["email"], name=a["name"]) for a in r["account"]
+            ]) for r in response["recipient"]],
+            timestamp=response["timestamp"]
+        )
+        # db.close()
         return result
 
     async def SendEmailSimple(self, request, context):
@@ -52,12 +52,12 @@ class NotificationService(notification_pb2_grpc.NotificationServiceServicer):
             emails=request.emails
         )
         print("receive request: ", mail_create)
-        db = self.db_session()
-        with db.begin():
-            response: str = await self.api_mail_operate.create_mails_without_return(mail_create, db)
-            result = notification_pb2.SimpleMessageResponse(
-                message=response
-            )
-        db.close()
+        # db = self.db_session()
+        # with db.begin():
+        response: str = await self.api_mail_operate.create_mails_without_db_return(mail_create)
+        result = notification_pb2.SimpleMessageResponse(
+            message=response
+        )
+        # db.close()
         return result
 
