@@ -290,13 +290,8 @@ class CustomSMPT(smtplib.SMTP):
     def _get_socket(self, host, port, timeout):
         if not self.proxy_type and not self.proxy_host and not self.proxy_port:
             return super()._get_socket(host, port, timeout)
-        normal_connection = socket.create_connection
-        try:
-            socket.create_connection = socks.create_connection
-            socks.set_default_proxy(self.proxy_type, self.proxy_host, self.proxy_port)
-            return super()._get_socket(host, port, timeout)
-        finally:
-            socket.create_connection = normal_connection
+        return socks.create_connection((host, port), timeout,
+                                    self.source_address, self.proxy_type, self.proxy_host, self.proxy_port)
 
 
 if __name__ == "__main__":
