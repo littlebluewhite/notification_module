@@ -3,13 +3,15 @@ redis:
   user:
   password:
   db: 4
+  socket_timeout: 2
 sql:
   host: 127.0.0.1
-  port: 3306
+  port: 5432
   user: root
   password: 123456
   db: notification
   pool_recycle: 3600
+  engine: postgresql
 influxdb:
   host: 127.0.0.1
   port: 8086
