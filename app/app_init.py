@@ -5,13 +5,15 @@ from general_operator.app.SQL.database import SQLDB
 from general_operator.app.influxdb.influxdb import InfluxDB
 from general_operator.app.redis_db.redis_db import RedisDB
 from general_operator.function.exception import GeneralOperatorException
+from general_operator.routers.all_table import AllTableRouter
 from general_util.log.deal_log import DealSystemLog
 from redis.client import Redis
 
+import data
 from app.SQL import models
-from data.API import api_mail
 from data.log.log_mapping import url_mapping
-from routers.API.api_mail import APIMailRouter
+from routers.API.mail.main import APIMailRouter
+from routers.API.notify.main import APINotifyRouter
 
 # from fastapi.security.api_key import APIKeyHeader
 
@@ -38,8 +40,17 @@ def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB, server_config: di
     db_session = db.new_db_session()
 
     app.include_router(APIMailRouter(
-        module=api_mail, redis_db=redis_db, influxdb=influxdb, exc=GeneralOperatorException,
+        redis_db=redis_db, influxdb=influxdb, exc=GeneralOperatorException,
         db_session=db_session).create())
+
+    app.include_router(APINotifyRouter(
+        redis_db=redis_db, influxdb=influxdb, exc=GeneralOperatorException,
+        db_session=db_session).create())
+
+    app.include_router(AllTableRouter(
+        module=data, redis_db=redis_db, influxdb=influxdb,
+        exc=GeneralOperatorException, db_session=db_session,
+        is_initial=True).create())
 
     @app.middleware("http")
     async def deal_with_log(request: Request, call_next):

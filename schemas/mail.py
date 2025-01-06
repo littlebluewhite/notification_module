@@ -1,5 +1,6 @@
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
 
 class Status(str, Enum):
     Success = "Success"
@@ -13,7 +14,8 @@ class Account(BaseModel):
 
 class Recipient(BaseModel):
     group: str
-    account: list[Account] = []
+    account: list[Account] = Field(default_factory=list)
+
 
 class Mail(BaseModel):
     id: int
@@ -21,7 +23,8 @@ class Mail(BaseModel):
     subject: str
     message: str
     status: Status = Status.Failure
-    recipient: list[Recipient] = []
+    recipient: list[Recipient] = Field(default_factory=list)
+
     timestamp: float
 
 class MailCreate(BaseModel):
@@ -31,4 +34,3 @@ class MailCreate(BaseModel):
     groups: list[str]
     accounts: list[str]
     emails: list[str]
-

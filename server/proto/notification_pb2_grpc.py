@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import notification_pb2 as server_dot_proto_dot_notification__pb2
+from server.proto import notification_pb2 as server_dot_proto_dot_notification__pb2
 
 GRPC_GENERATED_VERSION = '1.65.4'
 GRPC_VERSION = grpc.__version__
@@ -49,6 +49,16 @@ class NotificationServiceStub(object):
                 request_serializer=server_dot_proto_dot_notification__pb2.EmailSendRequest.SerializeToString,
                 response_deserializer=server_dot_proto_dot_notification__pb2.SimpleMessageResponse.FromString,
                 _registered_method=True)
+        self.SendNotify = channel.unary_unary(
+                '/NotificationService/SendNotify',
+                request_serializer=server_dot_proto_dot_notification__pb2.NotifyCreateRequest.SerializeToString,
+                response_deserializer=server_dot_proto_dot_notification__pb2.NotifyResponse.FromString,
+                _registered_method=True)
+        self.SendNotifySimple = channel.unary_unary(
+                '/NotificationService/SendNotifySimple',
+                request_serializer=server_dot_proto_dot_notification__pb2.NotifyCreateRequest.SerializeToString,
+                response_deserializer=server_dot_proto_dot_notification__pb2.SimpleMessageResponse.FromString,
+                _registered_method=True)
 
 
 class NotificationServiceServicer(object):
@@ -66,6 +76,18 @@ class NotificationServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendNotify(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendNotifySimple(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_NotificationServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -77,6 +99,16 @@ def add_NotificationServiceServicer_to_server(servicer, server):
             'SendEmailSimple': grpc.unary_unary_rpc_method_handler(
                     servicer.SendEmailSimple,
                     request_deserializer=server_dot_proto_dot_notification__pb2.EmailSendRequest.FromString,
+                    response_serializer=server_dot_proto_dot_notification__pb2.SimpleMessageResponse.SerializeToString,
+            ),
+            'SendNotify': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendNotify,
+                    request_deserializer=server_dot_proto_dot_notification__pb2.NotifyCreateRequest.FromString,
+                    response_serializer=server_dot_proto_dot_notification__pb2.NotifyResponse.SerializeToString,
+            ),
+            'SendNotifySimple': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendNotifySimple,
+                    request_deserializer=server_dot_proto_dot_notification__pb2.NotifyCreateRequest.FromString,
                     response_serializer=server_dot_proto_dot_notification__pb2.SimpleMessageResponse.SerializeToString,
             ),
     }
@@ -133,6 +165,60 @@ class NotificationService(object):
             target,
             '/NotificationService/SendEmailSimple',
             server_dot_proto_dot_notification__pb2.EmailSendRequest.SerializeToString,
+            server_dot_proto_dot_notification__pb2.SimpleMessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendNotify(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/NotificationService/SendNotify',
+            server_dot_proto_dot_notification__pb2.NotifyCreateRequest.SerializeToString,
+            server_dot_proto_dot_notification__pb2.NotifyResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendNotifySimple(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/NotificationService/SendNotifySimple',
+            server_dot_proto_dot_notification__pb2.NotifyCreateRequest.SerializeToString,
             server_dot_proto_dot_notification__pb2.SimpleMessageResponse.FromString,
             options,
             channel_credentials,

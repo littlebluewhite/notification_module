@@ -6,31 +6,24 @@ from general_operator.app.influxdb.influxdb import InfluxDB
 from general_operator.dependencies.db_dependencies import create_get_db
 from sqlalchemy.orm import sessionmaker, Session
 from starlette.responses import JSONResponse
+import data.mail
+from function.operate.mail import MailOperate
 
-from function.API.api_mail import APIMailOperate
-
-
-class APIMailRouter(APIMailOperate):
-    def __init__(self, module, redis_db:redis.Redis, influxdb: InfluxDB, exc,
+class APIMailRouter:
+    def __init__(self, redis_db:redis.Redis, influxdb: InfluxDB, exc,
                  db_session: sessionmaker):
         self.db_session = db_session
-        APIMailOperate.__init__(self, module, redis_db, influxdb, exc)
+        self.mail_operate = MailOperate(data.mail, redis_db, influxdb, exc)
 
     def create(self):
         router = APIRouter(
             prefix="/api/notification/mail",
-            tags=["log"],
+            tags=["mail"],
             dependencies=[],
         )
 
-        main_schemas = self.main_schemas
-        create_schemas = self.create_schemas
-
-        @router.on_event("startup")
-        async def task_startup_event():
-            db = self.db_session()
-            self.initial_redis_data(db)
-            db.close()
+        main_schemas = self.mail_operate.main_schemas
+        create_schemas = self.mail_operate.create_schemas
 
         @router.get("/history", response_model=list[main_schemas])
         async def get_history(start: Annotated[str, Query()],
@@ -39,28 +32,20 @@ class APIMailRouter(APIMailOperate):
                            status: Annotated[list[str] | None, Query()] = None,
                            senders: Annotated[list[str] | None, Query()] = None,
                            ):
-            return JSONResponse(content=self.get_history(start, stop, ids, status, senders))
+            return JSONResponse(content=self.mail_operate.get_history(start, stop, ids, status, senders))
 
         @router.post("/send")
         async def send_email(mail: create_schemas,
                               db: Session = Depends(create_get_db(self.db_session))):
             with db.begin():
-                content = await self.create_mails(mail, db)
+                content = await self.mail_operate.create_mail(mail, db)
                 return JSONResponse(content=content)
 
         @router.post("/send_without_return")
         async def send_email_without_return(mail: create_schemas,
                               db: Session = Depends(create_get_db(self.db_session))):
             with db.begin():
-                content = await self.create_mails_without_return(mail, db)
+                content = await self.mail_operate.create_mail_without_return(mail, db)
                 return JSONResponse(content=content)
-
-        @router.get("/test")
-        async def test_log():
-            return JSONResponse(content="test")
-
-        @router.get("/test2")
-        async def test_log2():
-            raise self.exc(status_code=444, message="test exception", message_code=5)
 
         return router

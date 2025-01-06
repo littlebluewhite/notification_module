@@ -4,7 +4,6 @@ import json
 import time
 
 import socks
-import socket
 import smtplib
 import threading
 from email.header import Header
@@ -16,10 +15,10 @@ import influxdb_client
 from general_util.async_request import fetch
 from general_util.config_manager import ConfigManager
 
-from schemas.API.api_mail import Status, Recipient, Account
+from schemas.mail import Status, Recipient, Account
 
 
-class APIMailFunction:
+class MailFunction:
     def __init__(self):
         pass
 
@@ -115,7 +114,7 @@ class APIMailFunction:
 csv.field_size_limit(10 ** 7)
 
 
-class APIMailOperate(GeneralOperate, APIMailFunction):
+class MailOperate(GeneralOperate, MailFunction):
     def __init__(self, module, redis_db, influxdb, exc):
         GeneralOperate.__init__(self, module, redis_db, influxdb, exc)
 
@@ -154,75 +153,25 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
 
         return result
 
-    async def create_mails(self, mail_create, db) -> dict:
+    async def create_mail(self, mail_create, db) -> dict:
         # write to sql and get id
         sql_list = self.create_sql(db, [dict()])
         mail = self.main_schemas(id=sql_list[0].id, sender=mail_create.sender, subject=mail_create.subject,
                                  message=mail_create.message, timestamp=sql_list[0].created_at.timestamp(),
                                  recipient=[])
 
-        # get account and group email
-        account_dict, account_info = await self.get_account_data()
+        return await self.deal_mail(mail, mail_create)
 
-        # deal with group and account
-        to_email, recipient = self.change_account_group_to_recipient(
-            create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
-            account_dict=account_dict, account_info=account_info)
-
-        # send mail
-        is_success = self.send_email(email=to_email, subject=mail.subject, message=mail.message, sender=mail.sender)
-        if is_success:
-            mail.status = Status.Success
-        else:
-            mail.status = Status.Failure
-
-        mail.recipient = recipient
-
-        # write to influxdb
-        points = [influxdb_client.Point(
-            "mail").tag("id", str(mail.id))
-                  .tag("sender", str(mail.sender))
-                  .tag("status", str(mail.status.value))
-                  .time(int(mail.timestamp * 10 ** 6) * 1000)
-                  .field("data", mail.json())]
-        self.write(points)
-        return mail.dict()
-
-    async def create_mails_without_db(self, mail_create) -> dict:
+    async def create_mail_without_db(self, mail_create) -> dict:
         now = time.time()
         _id = int(now * 10 ** 6)
         mail = self.main_schemas(id=_id, sender=mail_create.sender, subject=mail_create.subject,
                                  message=mail_create.message, timestamp=now,
                                  recipient=[])
 
-        # get account and group email
-        account_dict, account_info = await self.get_account_data()
+        return await self.deal_mail(mail, mail_create)
 
-        # deal with group and account
-        to_email, recipient = self.change_account_group_to_recipient(
-            create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
-            account_dict=account_dict, account_info=account_info)
-
-        # send mail
-        is_success = self.send_email(email=to_email, subject=mail.subject, message=mail.message, sender=mail.sender)
-        if is_success:
-            mail.status = Status.Success
-        else:
-            mail.status = Status.Failure
-
-        mail.recipient = recipient
-
-        # write to influxdb
-        points = [influxdb_client.Point(
-            "mail").tag("id", str(mail.id))
-                  .tag("sender", str(mail.sender))
-                  .tag("status", str(mail.status.value))
-                  .time(int(mail.timestamp * 10 ** 6) * 1000)
-                  .field("data", mail.json())]
-        self.write(points)
-        return mail.dict()
-
-    async def create_mails_without_return(self, mail_create, db) -> str:
+    async def create_mail_without_return(self, mail_create, db) -> str:
         # write to sql and get id
         sql_list = self.create_sql(db, [dict()])
         mail = self.main_schemas(id=sql_list[0].id, sender=mail_create.sender, subject=mail_create.subject,
@@ -231,7 +180,7 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
 
         # et account and group email, get account and group email, send mail and write to influxdb
         thread = threading.Thread(
-            target=self.send_email_target, args=(mail, mail_create))
+            target=self.thread_target, args=(mail, mail_create))
         thread.start()
         return "ok"
 
@@ -242,13 +191,16 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
                                  message=mail_create.message, timestamp=now,
                                  recipient=[])
 
-        # et account and group email, get account and group email, send mail and write to influxdb
+        # get account and group email, get account and group email, send mail and write to influxdb
         thread = threading.Thread(
-            target=self.send_email_target, args=(mail, mail_create))
+            target=self.thread_target, args=(mail, mail_create))
         thread.start()
         return "ok"
 
-    async def send_email_async(self, mail, mail_create):
+    def thread_target(self, mail, mail_create):
+        asyncio.run(self.deal_mail(mail, mail_create))
+
+    async def deal_mail(self, mail, mail_create):
         # get account and group email
         account_dict, account_info = await self.get_account_data()
 
@@ -257,6 +209,7 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
             create_group=mail_create.groups, create_account=mail_create.accounts, create_email=mail_create.emails,
             account_dict=account_dict, account_info=account_info)
 
+        # send mail
         is_success = self.send_email(to_email, mail.subject, mail.message, mail.sender)
         if is_success:
             mail.status = Status.Success
@@ -274,9 +227,7 @@ class APIMailOperate(GeneralOperate, APIMailFunction):
                   .field("data", mail.json())]
         self.write(points)
         print("send email success")
-
-    def send_email_target(self, mail, mail_create):
-        asyncio.run(self.send_email_async(mail, mail_create))
+        return mail.dict()
 
 
 class CustomSMPT(smtplib.SMTP):
@@ -291,7 +242,7 @@ class CustomSMPT(smtplib.SMTP):
         if not self.proxy_type and not self.proxy_host and not self.proxy_port:
             return super()._get_socket(host, port, timeout)
         return socks.create_connection((host, port), timeout,
-                                    self.source_address, self.proxy_type, self.proxy_host, self.proxy_port)
+                                       self.source_address, self.proxy_type, self.proxy_host, self.proxy_port)
 
 
 if __name__ == "__main__":
