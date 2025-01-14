@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from general_operator.app.SQL.database import SQLDB
 from general_operator.app.influxdb.influxdb import InfluxDB
 from general_operator.app.redis_db.redis_db import RedisDB
@@ -15,7 +15,6 @@ from data.log.log_mapping import url_mapping
 from routers.API.mail.main import APIMailRouter
 from routers.API.notify.main import APINotifyRouter
 
-# from fastapi.security.api_key import APIKeyHeader
 
 from version import version
 
@@ -54,6 +53,21 @@ def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB, server_config: di
 
     @app.middleware("http")
     async def deal_with_log(request: Request, call_next):
+        request_body = ""
+        if server_config["system_log_enable"]:
+            request_body = await request.body()
+            request_body = request_body.decode()
+            async def receive():
+                return {
+                    "type": "http.request",
+                    "body": request_body,
+                    "more_body": False
+                }
+            # 重建request
+            request = Request(
+                scope=request.scope,
+                receive=receive
+            )
         try:
             response = await call_next(request)
         except Exception as e:
@@ -62,8 +76,14 @@ def create_app(db: SQLDB, redis_db: Redis, influxdb: InfluxDB, server_config: di
                                     headers={"message": str(e), "message_code": "500"})
         try:
             if server_config["system_log_enable"]:
-                await DealSystemLog(request=request, response=response,
-                                    url_mapping=url_mapping, code_rules=None).deal(server_config["system_log_g_server"])
+                response_body = b"".join([chunk async for chunk in response.body_iterator]).decode()
+                await DealSystemLog(request=request, response=response, request_body=request_body,
+                                    response_body=response_body, url_mapping=url_mapping,
+                                    code_rules=None).deal(server_config["system_log_g_server"])
+                # 重建response
+                response = Response(content=response_body,
+                                    status_code=response.status_code,
+                                    headers=response.headers)
         except Exception as e:
             print(e)
         return response
